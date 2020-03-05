@@ -7,7 +7,7 @@ Set-Membership Filter
         :target: https://pypi.python.org/pypi/sfilter
 
 .. image:: https://img.shields.io/travis/k2shah/sfilter.svg
-        :target: https://travis-ci.com/k2shah/sfilter
+        :target: https://travis-ci.org/k2shah/sfilter
 
 .. image:: https://readthedocs.org/projects/sfilter/badge/?version=latest
         :target: https://sfilter.readthedocs.io/en/latest/?badge=latest
