@@ -10,7 +10,7 @@ python:
 # Command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -U tox-travis
 before_install:
-  - pip install --user codecov
+  - pip install codecov
 after_success:
   - codecov --file coverage/lcov.info --disable search
 
