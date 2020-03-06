@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Tests for Ellipsoid class in the 'sfilter` package."""
+"""Tests for Ellipsoid class in the 'setfilter` package."""
 import pytest
 # math
 import numpy as np
@@ -10,14 +10,14 @@ import numpy.random as rand
 def base():
     """test Ellipsoid class """
     # build fixture
-    from sfilter.ellipsoid import Ellipsoid
+    from setfilter.ellipsoid import Ellipsoid
     center = [1., 2., 3.]
     body = np.array([[2, .50, .50], [.50, 1.0, .2], [.5, .2, 1.0]])
     return Ellipsoid(center, body)
 
 def test_inside(base):
     center = np.array([1., 2., 3.])
-    assert base.inside(center), "center is not inside ellipsoid"
+    assert base.inside(center) , "center is not inside ellipsoid"
 
 def test_sample(base):
     nTests = 100
@@ -56,7 +56,7 @@ def sphereR2():
     """test Ellipsoid class """
     # build fixture
     # sphere centered at (1, 0, 0) with radius 2
-    from sfilter.ellipsoid import Ellipsoid
+    from setfilter.ellipsoid import Ellipsoid
     center = [1., 0., 0.]
     body = np.array([[4.0, 0, 0], [0, 4.0, 0], [0, 0, 4.0]])
     return Ellipsoid(center, body)

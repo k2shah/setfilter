@@ -29,7 +29,7 @@ class Ellipsoid(object):
     def normalMap(self, d, normalized=True):
         # maps a point d on the unit sphere to it's normal on the ellipsoid
         normal = la.inv(self.G.T) @ d
-        return normalize(normal) if normalize else normal
+        return normalize(normal) if normalized else normal
 
     def project(self, pt):
         # projects the point pt onto the ellipsoid defined by  x | (x-u)^T S^-1(x-u)=1

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/sfilter.iml" filepath="$PROJECT_DIR$/.idea/sfilter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/setfilter.iml" filepath="$PROJECT_DIR$/.idea/setfilter.iml" />
     </modules>
   </component>
 </project>

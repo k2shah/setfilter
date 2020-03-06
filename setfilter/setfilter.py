@@ -26,19 +26,19 @@ class Sfilter(object):
                  model=None, initNoise=True):
         # unpack dimension and noises
         self.dim = len(center)
-        self.pNoise = processNoise
-        self.mNoise = measurementNoise
+        # 0 centered ellipsoids for the noise objects
+        self.processNoise = Ellipsoid(np.zeros(self.dim), processNoise)
+        self.measureNoise = Ellipsoid(np.zeros(self.dim), measurementNoise)
+        # build model, default is the single integrator
         if model is None:
             self.model = LinearModel(
                 np.eye(self.dim), np.eye(self.dim), np.eye(self.dim))
         else:
             self.model = model
+        # initialize estimate object
         centerInit = self.measure(center) if initNoise else center  # mean
         self.estimate= Ellipsoid(centerInit, body)
         self.scale = 1.0  # scalar for the body metric, used by the update algo
-
-        # cache
-        self.G = la.cholesky(self.body)
 
     def measure(self, truePosition):
         # simulates a measurement, requires the true value of the item being estimated

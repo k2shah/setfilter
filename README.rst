@@ -3,13 +3,13 @@ Set-Membership Filter
 =====================
 
 
-.. image:: https://img.shields.io/pypi/v/sfilter.svg
-        :target: https://pypi.python.org/pypi/sfilter
+.. image:: https://img.shields.io/pypi/v/setfilter.svg
+        :target: https://pypi.python.org/pypi/setfilter
 
-.. image:: https://img.shields.io/travis/k2shah/sfilter.svg
-        :target: https://travis-ci.org/k2shah/sfilter
+.. image:: https://img.shields.io/travis/k2shah/setfilter.svg
+        :target: https://travis-ci.org/k2shah/setfilter
 
-.. image:: https://readthedocs.org/projects/sfilter/badge/?version=latest
+.. image:: https://readthedocs.org/projects/setfilter/badge/?version=latest
         :target: https://sfilter.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
@@ -20,7 +20,7 @@ A set-membership filter for kalman style filtering on sets
 
 
 * Free software: MIT license
-* Documentation: https://sfilter.readthedocs.io.
+* Documentation: https://setfilter.readthedocs.io.
 
 
 Features
