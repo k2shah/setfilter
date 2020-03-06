@@ -2,6 +2,7 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as rand
 import cvxpy as cvx
+from warnings import warn
 from .utils import normalize
 
 
@@ -10,11 +11,24 @@ class Ellipsoid(object):
     def __init__(self, center, body):
         # center of the ellipsoid
         self.center = np.array(center)  # np array of size n
+        if not self.isPSD(body):
+            warn("body matrix is not PSD, projecting to PSD cone")
+
         self.body = np.array(body)  # body matrix n by n assumes PSD
         # cache some values matrices
         self.dim = len(self.center)
         self.G = la.cholesky(self.body)  # cholesky deomp of the body matrix
-        self.bodyInv = la.inv(self.body)  # save the inverse of the body matrix
+        self.bodyInv = la.inv(self.body)  # save the inverse of the body matrix\\
+
+    def isPSD(self, A):
+        if np.array_equal(A, A.T):
+            try:
+                np.linalg.cholesky(A)
+                return True
+            except np.linalg.LinAlgError:
+                return False
+        else:
+            return False
 
     def getAxis(self):
         # return the ellipsoid semi-axis

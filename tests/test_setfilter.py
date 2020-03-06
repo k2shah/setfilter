@@ -1,59 +1,40 @@
-# #!/usr/bin/env python
-# """Tests for `sfilter` package."""
-# import pytest
-#
-# from sfilter import sfilter
-#
-#
-# @pytest.fixture
-# def base():
-#     """test Sfitler """
-#     # build fixture
-#     import numpy as np
-#     import numpy.random as rand
-#     from sfilter.utils import normalize
-#     dim = 3
-#
-#
-#
-#     # S=np.array([[1, 0, 0],[0, 2, .0 ], [0, 0, 2.0]])
-#     S = np.array([[2, .50, .50], [.50, 1.0, .2], [.5, .2, 1.0]])
-#     # S=np.eye(3)*4
-#     # S=np.eye(3)
-#     noise = np.eye(3)
-#     pts = 20
-#     #estimate = EstimateBounded3D(u, S, noise, noise*.5)
-#
-#     #sfilter.Sfilter
-#
-#
-# def test_measure(base):
-#     self.fail()
-#
-#
-# def test_projectEstimate(base):
-#     self.fail()
-#
-#
-# def test_project(base):
-#     self.fail()
-#
-#
-# def test_addMargin(base):
-#     self.fail()
-#
-#
-# def test_dist(base):
-#     self.fail()
-#
-#
-# def test_elipMap(base):
-#     self.fail()
-#
-#
-# def test_normalMap(base):
-#     self.fail()
-#
-#
-# def test_update(base):
-#     self.fail()
+#!/usr/bin/env python
+"""Tests for `sfilter` package."""
+import pytest
+import numpy as np
+import numpy.random as rand
+
+
+
+@pytest.fixture
+def base():
+    """test Setfilter """
+    # build fixture
+    from setfilter.setfilter import Setfilter
+
+    # initialization
+    center = np.array([0, 0, 0, 0.])
+    body = np.array([[1., 0., 0., 0.],
+                     [0., 1., 0., 0.],
+                     [0., 0., 1., 0.],
+                     [0., 0., 0., 1.]])
+    noise = np.eye(len(center))
+    tracker = Setfilter(center, body,
+                        noise*.2, noise*.1,
+                        initNoise=False)
+
+    return tracker
+
+
+def test_update(base):
+    nTests = 50
+    for i in range(nTests):
+        delta = base.processNoise.sample()
+        print(delta)
+        trueValue = np.array([0, 1, 2, 3.]) + delta
+        measurement = base.measure(trueValue)
+        base.update(measurement)
+        print(base.estimate.dist((measurement)))
+        assert base.estimate.inside(trueValue), i
+
+

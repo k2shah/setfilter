@@ -3,8 +3,6 @@
 import numpy as np
 import numpy.linalg as la
 import numpy.random as rand
-from scipy.linalg import qr
-import cvxpy as cvx
 
 # lib
 from .ellipsoid import Ellipsoid
@@ -20,7 +18,7 @@ class LinearModel(object):
         self.D = D  # feed forward
 
 
-class Sfilter(object):
+class Setfilter(object):
     def __init__(self, center, body,
                  processNoise, measurementNoise,
                  model=None, initNoise=True):
@@ -48,6 +46,7 @@ class Sfilter(object):
         :param trueValue: the true value of the item being estimated
         :return: trueValue plus the sampled noise
         """
+        print()
         return self.measureNoise.sample() + trueValue
 
     def projectEstimate(self):
@@ -92,11 +91,11 @@ class Sfilter(object):
         if typ == 'elip':
             margin = r
 
-        p = np.sqrt(np.trace(self.scale*self.body)) + np.sqrt(np.trace(margin))
+        p = np.sqrt(np.trace(self.scale*self.estimate.body)) + np.sqrt(np.trace(margin))
         p = np.sqrt(np.trace(margin))/p
 
         # expanded body matrix
-        return Ellipsoid(self.center, np.power(1-p, -1)*self.body + np.power(self.scale*p, -1)*margin)
+        return Ellipsoid(self.estimate.center, np.power(1-p, -1)*self.estimate.body + np.power(self.scale*p, -1)*margin)
 
     def project(self, pt):
         """
