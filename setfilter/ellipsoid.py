@@ -4,6 +4,7 @@ import numpy.random as rand
 import cvxpy as cvx
 from .utils import normalize
 
+
 class Ellipsoid(object):
     """container for a generic ellipsoid object in any dimensions"""
     def __init__(self, center, body):
@@ -24,7 +25,7 @@ class Ellipsoid(object):
 
     def surfaceMap(self, d):
         # maps a point d on the unit sphere to the ellipsoid defined with self
-        return self.G @ d +self.center
+        return self.G @ d + self.center
 
     def normalMap(self, d, normalized=True):
         # maps a point d on the unit sphere to it's normal on the ellipsoid
@@ -33,7 +34,7 @@ class Ellipsoid(object):
 
     def project(self, pt):
         # projects the point pt onto the ellipsoid defined by  x | (x-u)^T S^-1(x-u)=1
-        assert len(pt)** 2 == len(self.body.flatten())  # assert the dimensions are compatible
+        assert len(pt) ** 2 == len(self.body.flatten())  # assert the dimensions are compatible
         cvx_x = cvx.Variable(self.dim)
         # objective
         obj = cvx.Minimize(cvx.norm(cvx_x - pt, 2))
@@ -56,6 +57,6 @@ class Ellipsoid(object):
     def sample(self):
         # return a random point inside the ellipsoid
         # https://math.stackexchange.com/questions/87230/picking-random-points-in-the-volume-of-sphere-with-uniform-probability
-        pt = rand.multivariate_normal(np.zeros((self.dim)), np.eye(self.dim)) # sample from n-dim normal
+        pt = rand.multivariate_normal(np.zeros((self.dim)), np.eye(self.dim))  # sample from n-dim normal
         pt *= (rand.random() ** (1/self.dim)) / la.norm(pt)
         return self.G @ pt + self.center

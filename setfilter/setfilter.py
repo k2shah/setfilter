@@ -37,45 +37,52 @@ class Sfilter(object):
             self.model = model
         # initialize estimate object
         centerInit = self.measure(center) if initNoise else center  # mean
-        self.estimate= Ellipsoid(centerInit, body)
+        self.estimate = Ellipsoid(centerInit, body)
         self.scale = 1.0  # scalar for the body metric, used by the update algo
 
-    def measure(self, truePosition):
-        # simulates a measurement, requires the true value of the item being estimated
-        # returns a sample drawn from the bounded set v'Sm^-1v<1 where Sm is self.mNoise
-        # hypersphere sample https://mathworld.wolfram.com/HyperspherePointPicking.html
-        pt = rand.multivariate_normal(self.dim, np.eye(self.dim)) # sample from n-dim normal
-        pt = normalize(pt)
-        F = la.cholesky(self.mNoise)
-        return F.dot(pt)+truePosition
+    def measure(self, trueValue):
+        """
+        simulates a measurement
+
+        produces a noise corrupted measurement by a sample drawn from the noise set
+        :param trueValue: the true value of the item being estimated
+        :return: trueValue plus the sampled noise
+        """
+        return self.measureNoise.sample() + trueValue
 
     def projectEstimate(self):
-        # returns a projected estimate object that takes into future size
+        """
+        open loop projection of the estimate
+
+        :return: projected estimate object Ellipsoid that takes into future size
+        """
 
         A = self.model.A
         B = self.model.B
         C = self.model.C
 
-        center_hat = self.elip.center
-        body_hat = self.elip.body
+        center_hat = self.estimate.center
+        body_hat = self.estimate.body
 
         # minimal trace method
-        p = np.sqrt(np.trace(A.dot(body_hat.dot(A.T)))
-                    ) + np.sqrt(np.trace(self.pNoise))
-        p = np.sqrt(np.trace(self.pNoise))/p
+        p = np.sqrt(np.trace(A @ body_hat @ A.T)) + np.sqrt(np.trace(self.processNoise.body))
+        p = np.sqrt(np.trace(self.processNoise.body))/p
 
-        center_hat = np.dot(A, center_hat)
+        center_hat = A @ center_hat
         # intermediate body matrix
-        return  np.power(1-p, -1)*A.dot(body_hat.dot(A.T)) + np.power(p, -1) * self.pNoise
-
-    def project(self, pt):
-        # projects a point onto the ellipsoid
-        return self.elip.project(pt)
+        return Ellipsoid(center_hat,
+                         np.power(1-p, -1)*A @ body_hat @ A.T + np.power(p, -1) * self.processNoise.body)
 
     def addMargin(self, r, typ='ball'):
-        ''' returns an the body of an ellipsoid that contains the estimate
-        with a margin of at least r '''
-        # outer bounding ellipsoid of the minsowski sum of epi and radius r ball
+        """
+        inflate the estimate with a user defined margin (for physical size)
+
+        produces a outer bounding ellipsoid of the minsowski sum of epi and radius r ball
+        :param r:
+        :param typ: "ball": add's spherical margin of radius r
+                    "elips: add an ellipsoidal margin
+        :return: an inflated estimate Ellipsoid object with the added margin
+        """
         margin = 0
         if typ == 'ball':
             if not isinstance(r, float):
@@ -88,53 +95,57 @@ class Sfilter(object):
         p = np.sqrt(np.trace(self.scale*self.body)) + np.sqrt(np.trace(margin))
         p = np.sqrt(np.trace(margin))/p
 
-        # intermediate body matrix
-        return np.power(1-p, -1)*self.body + np.power(self.scale*p, -1)*margin
+        # expanded body matrix
+        return Ellipsoid(self.center, np.power(1-p, -1)*self.body + np.power(self.scale*p, -1)*margin)
+
+    def project(self, pt):
+        """
+        projects a point onto the estimate ellipsoid
+        """
+        return self.estimate.project(pt)
 
     def dist(self, pt):
-        # finds the distance between the point pt and the estimate ellipsoid
-        return la.norm(pt - self.project(pt))
-
-    def elipMap(self, d):
-        # maps a point d on the unit sphere to the ellipsoid defined with self
-        return self.G.dot(d)+self.center
-
-    def normalMap(self, d):
-        # maps a point d on the unit sphere to it's normal on the ellipsoid
-        return np.dot(la.inv(self.G.T), d)
+        """
+        finds the distance between the point pt and the estimate ellipsoid in the L2 Hausdorff sense
+        """
+        return self.estimate.dist(pt)
 
     def update(self, measurement):
-        # implements some sort of bounded set measurement update
-        # method from Yushuang Liu ,Yan Zhao, Falin Wu
-        # unpack
+        """
+        implements a bounded set measurement update
+
+        minimal trace method from Yushuang Liu ,Yan Zhao, Falin Wu
+        :param measurement:
+        :return: None. updates the internal estimate object
+        """
+        # reset scale
         self.scale = 1
+        # unpack
         # model
         A = self.model.A
         B = self.model.B
         C = self.model.C
         # ellipsoid
-        center = self.elip.center
-        body = self.elip.body
+        center = self.estimate.center
+        body = self.estimate.body
 
         # minimal trace method
-        p = np.sqrt(np.trace(self.scale*A.dot(self.body.dot(A.T)))) + \
-            np.sqrt(np.trace(self.pNoise))
-        p = np.sqrt(np.trace(self.pNoise))/p
+        p = np.sqrt(np.trace(self.scale*A @ body @ A.T)) + np.sqrt(np.trace(self.processNoise.body))
+        p = np.sqrt(np.trace(self.processNoise.body))/p
 
-        center_hat = np.dot(A, self.center)
-        body_hat = np.power(1-p, -1)*A.dot(self.body.dot(A.T)) + \
-            np.power(self.scale*p, -1)*self.pNoise  # intermediate body matrix
+        center_hat = A @ center
+        # intermediate body matrix
+        body_hat = np.power(1-p, -1)* A @ body @ A.T + np.power(self.scale*p, -1) * self.processNoise.body
 
         # measurement update
         # upper bound method
         delta = measurement-C.dot(center_hat)  # innovation
-        CP_quad = C.dot(body_hat.dot(C.T))  # C*P_hat*C.T
-        V_bar = la.cholesky(la.inv(self.mNoise)).T
+        CP_quad = C @ body_hat @ C.T  # C*P_hat*C.T
+        V_bar = la.cholesky(self.measureNoise.bodyInv).T
         delta_bar = V_bar.dot(delta)
         G = V_bar.dot(CP_quad.dot(V_bar.T))
         val, vec = la.eig(G)
         g = max(val)
-
         beta = (1.0-self.scale)/la.norm(delta_bar)
         # mixing parameter for measurement
         if self.scale+la.norm(delta_bar) <= 1.0:
@@ -148,14 +159,11 @@ class Sfilter(object):
             # handle the edge case
             Q_inv = np.zeros((self.dim, self.dim))
         else:
-            Q = np.power(L, -1)*self.mNoise+np.power(1-L, -1) * \
-                CP_quad  # intermediate thing
+            Q = np.power(L, -1)*self.measureNoise.body + np.power(1-L, -1) * CP_quad
             Q_inv = la.inv(Q)
 
-        K = np.power(1-L, -1)*body_hat.dot(np.dot(C.T, Q_inv))  # "kalman" gain
-        self.scale = (1-L)*self.scale+L-np.dot(delta.T,
-                                               Q_inv.dot(delta))  # scale
-        # print("scale dec: ", self.scale)
-        self.body = self.scale * np.power(1-L, -1)*np.dot(np.eye(self.dim)-K.dot(C), body_hat)
-        self.center = center_hat+K.dot(delta)
-        self.G = la.cholesky(self.body)
+        K = np.power(1-L, -1)*body_hat @ C.T @ Q_inv  # "kalman" gain
+        self.scale = (1-L)*self.scale+L - delta.T @ Q_inv @ delta  # scale
+        # update estimate
+        self.estimate = Ellipsoid(center_hat + K @ delta,
+                                  self.scale * np.power(1-L, -1)* (np.eye(self.dim)-K @ C) @ body_hat)
