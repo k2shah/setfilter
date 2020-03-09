@@ -30,11 +30,9 @@ def test_update(base):
     nTests = 50
     for i in range(nTests):
         delta = base.processNoise.sample()
-        print(delta)
-        trueValue = np.array([0, 1, 2, 3.]) + delta
+        trueValue = np.array([0, .4, 0, 0.]) + delta
         measurement = base.measure(trueValue)
         base.update(measurement)
-        print(base.estimate.dist((measurement)))
         assert base.estimate.inside(trueValue), i
 
 
